@@ -1,22 +1,15 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/context/AuthContext'
-import {
-  collection,
-  query,
-  where,
-  onSnapshot,
-  orderBy,
-  DocumentData,
-  Timestamp,
-} from 'firebase/firestore'
+import { Timestamp, doc, updateDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
+import { useAuth } from '@/context/AuthContext'
+import InterviewComponent from '@/components/layouts/form-components/InterviewComponent'
+import {
+  useEditableFields,
+  EditableJob,
+} from '@/lib/hooks/useEditableFields'
 
-import Modal from '@/components/ui/modals/Modal'
-import InterviewCreatorModal from '@/components/ui/modals/InterviewCreatorModal'
-
-interface Job {
+export interface JobWithTimestamps {
   id: string
   companyName?: string
   jobTitle?: string
@@ -27,24 +20,13 @@ interface Job {
   contactEmail?: string
   contactPhone?: string
   jobPostingUrl?: string
-  priority?: string
+  priority?: 'LOW' | 'MEDIUM' | 'HIGH'
   autoFollowUp?: boolean
   createdAt?: Timestamp
 }
 
-interface Interview {
-  id: string
-  jobId: string
-  userId: string
-  interviewDateTime?: Timestamp
-  interviewers?: string
-  contactInfo?: string
-  notes?: string
-  createdAt?: Timestamp
-}
-
 interface JobDetailsModalProps {
-  job: Job
+  job: JobWithTimestamps // full job with Timestamps
   onClose: () => void
 }
 
@@ -54,39 +36,42 @@ export default function JobDetailsModal({
 }: JobDetailsModalProps) {
   const { currentUser } = useAuth()
 
-  // Local state for interviews
-  const [interviews, setInterviews] = useState<Interview[]>([])
+  // Convert your full "JobWithTimestamps" to "EditableJob" by omitting timestamp fields
+  const editableJob: EditableJob = {
+    id: job.id,
+    companyName: job.companyName,
+    jobTitle: job.jobTitle,
+    outcome: job.outcome,
+    notes: job.notes,
+    contactName: job.contactName,
+    contactEmail: job.contactEmail,
+    contactPhone: job.contactPhone,
+    jobPostingUrl: job.jobPostingUrl,
+    priority: job.priority,
+    autoFollowUp: job.autoFollowUp,
+  }
 
-  // For showing the "Add Interview" modal
-  const [showInterviewModal, setShowInterviewModal] = useState(false)
+  // A callback that updates the doc in Firestore
+ async function updateEditableJob(updates: Partial<EditableJob>) {
+   if (!currentUser) return
 
-  useEffect(() => {
-    if (!job?.id || !currentUser) return
+   try {
+     // The Firestore doc reference for this job:
+     const docRef = doc(db, 'jobs', job.id)
 
-    // Load all interviews for this job, sorted by interviewDateTime ascending
-    const q = query(
-      collection(db, 'interviews'),
-      where('jobId', '==', job.id),
-      where('userId', '==', currentUser.uid),
-      orderBy('interviewDateTime', 'asc')
-    )
+     // The actual update call:
+     await updateDoc(docRef, updates)
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const docs = snapshot.docs.map((doc) => {
-        const data = doc.data() as DocumentData
-        return {
-          id: doc.id,
-          ...data,
-        } as Interview
-      })
-      // Real-time update from Firestore
-      setInterviews(docs)
-    })
+     console.log('Successfully updated job in Firestore')
+   } catch (err) {
+     console.error('Error updating doc:', err)
+   }
+ }
 
-    return () => unsubscribe()
-  }, [job?.id, currentUser])
+  const { hasChanges, renderEditableField, handleSaveChanges } =
+    useEditableFields(editableJob, updateEditableJob)
 
-  // Format timestamps
+  // Format read-only date fields
   const appliedDateFormatted = job.appliedDate
     ? job.appliedDate.toDate().toLocaleDateString()
     : ''
@@ -94,139 +79,46 @@ export default function JobDetailsModal({
     ? job.createdAt.toDate().toLocaleString()
     : ''
 
-  // This function gets called right after we create the interview,
-  // so we can add it to local state without waiting for Firestore snapshot.
-  function handleInterviewSuccess(localInterview: {
-    interviewDateTime: Date
-    interviewers?: string
-    contactInfo?: string
-    notes?: string
-  }) {
-    // Construct a pseudo interview object
-    const tempId = 'temp-' + Date.now().toString()
-
-    const newInterview: Interview = {
-      id: tempId, // local-only ID
-      jobId: job.id,
-      userId: currentUser?.uid || '',
-      // We'll store a local date; Firestore would store a Timestamp
-      interviewDateTime: {
-        toDate: () => localInterview.interviewDateTime,
-      } as Timestamp,
-      interviewers: localInterview.interviewers,
-      contactInfo: localInterview.contactInfo,
-      notes: localInterview.notes,
-      createdAt: { toDate: () => new Date() } as Timestamp, // or you could omit
-    }
-
-    setInterviews((prev) => [...prev, newInterview])
-  }
-
   return (
     <div>
       <h2 className='text-xl font-bold mb-4'>Job Details</h2>
-      {/* Display job info... */}
+
+      {/* Render editable fields (no timestamps) */}
       <div className='space-y-2'>
-        <p>
-          <strong>Company Name:</strong> {job.companyName || ''}
-        </p>
-        <p>
-          <strong>Job Title:</strong> {job.jobTitle || ''}
-        </p>
+        {renderEditableField('companyName', 'Company Name')}
+        {renderEditableField('jobTitle', 'Job Title')}
+
         <p>
           <strong>Applied Date:</strong> {appliedDateFormatted}
         </p>
-        <p>
-          <strong>Outcome:</strong> {job.outcome || ''}
-        </p>
-        <p>
-          <strong>Notes:</strong> {job.notes || ''}
-        </p>
-        <p>
-          <strong>Contact Name:</strong> {job.contactName || ''}
-        </p>
-        <p>
-          <strong>Contact Email:</strong> {job.contactEmail || ''}
-        </p>
-        <p>
-          <strong>Contact Phone:</strong> {job.contactPhone || ''}
-        </p>
-        <p>
-          <strong>Job Posting:</strong>{' '}
-          {job.jobPostingUrl ? (
-            <a
-              href={job.jobPostingUrl}
-              target='_blank'
-              rel='noopener noreferrer'
-              className='text-blue-600 hover:underline'
-            >
-              View Posting
-            </a>
-          ) : (
-            ''
-          )}
-        </p>
-        <p>
-          <strong>Priority:</strong> {job.priority || ''}
-        </p>
-        <p>
-          <strong>Auto Follow-Up:</strong> {job.autoFollowUp ? 'Yes' : 'No'}
-        </p>
+        {renderEditableField('outcome', 'Outcome', false)}
+        {renderEditableField('notes', 'Notes', true)}
+        {renderEditableField('contactName', 'Contact Name')}
+        {renderEditableField('contactEmail', 'Contact Email')}
+        {renderEditableField('contactPhone', 'Contact Phone')}
+        {renderEditableField('jobPostingUrl', 'Job Posting')}
+        {renderEditableField('priority', 'Priority')}
+        {renderEditableField('autoFollowUp', 'Auto Follow-Up')}
         <p>
           <strong>Created At:</strong> {createdAtFormatted}
         </p>
       </div>
 
-      {/* Interviews section */}
-      <div className='mt-6'>
-        <div className='flex items-center justify-between'>
-          <h3 className='text-lg font-bold'>Interviews</h3>
+      {hasChanges && (
+        <div className='mt-4'>
           <button
-            onClick={() => setShowInterviewModal(true)}
-            className='px-4 py-2 bg-sky-700 text-white rounded transition-all duration-200 hover:bg-sky-600 cursor-pointer'
+            onClick={handleSaveChanges}
+            className='px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700'
           >
-            + Add Interview
+            Save Changes
           </button>
         </div>
+      )}
 
-        {/* List existing interviews */}
-        {interviews.length === 0 ? (
-          <p className='text-gray-600'>No interviews scheduled.</p>
-        ) : (
-          <ul className='mt-4 space-y-2'>
-            {interviews.map((interview) => {
-              const interviewDate = interview.interviewDateTime
-                ? interview.interviewDateTime.toDate().toLocaleString()
-                : ''
-              return (
-                <li key={interview.id} className='p-3 border rounded'>
-                  <p className='text-sm text-gray-700'>
-                    <strong>Date/Time:</strong> {interviewDate}
-                  </p>
-                  {interview.interviewers && (
-                    <p className='text-sm text-gray-700'>
-                      <strong>Interviewers:</strong> {interview.interviewers}
-                    </p>
-                  )}
-                  {interview.contactInfo && (
-                    <p className='text-sm text-gray-700'>
-                      <strong>Contact Info:</strong> {interview.contactInfo}
-                    </p>
-                  )}
-                  {interview.notes && (
-                    <p className='text-sm text-gray-700'>
-                      <strong>Notes:</strong> {interview.notes}
-                    </p>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
-        )}
-      </div>
+      {/* Interviews, etc. */}
+      <InterviewComponent jobId={job.id} />
 
-      {/* Buttons */}
-      <div className='mt-6 text-right'>
+      <div className='mt-4 text-right'>
         <button
           onClick={onClose}
           className='px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700'
@@ -234,17 +126,6 @@ export default function JobDetailsModal({
           Close
         </button>
       </div>
-
-      {/* Add Interview Modal */}
-      {showInterviewModal && (
-        <Modal onClose={() => setShowInterviewModal(false)}>
-          <InterviewCreatorModal
-            jobId={job.id}
-            onClose={() => setShowInterviewModal(false)}
-            onCreateInterviewSuccess={handleInterviewSuccess}
-          />
-        </Modal>
-      )}
     </div>
   )
 }

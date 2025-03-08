@@ -1,6 +1,7 @@
 'use client'
 
 import { db } from '@/lib/firebase'
+import { doc, Timestamp, updateDoc } from 'firebase/firestore'
 import {
   addDoc,
   collection,
@@ -15,7 +16,7 @@ export type Priority = 'HIGH' | 'MEDIUM' | 'LOW'
 export interface JobData {
   companyName: string
   jobTitle: string
-  appliedDate: Date
+  appliedDate: Date | Timestamp
   notes?: string
   contactName?: string
   contactEmail?: string
@@ -56,5 +57,19 @@ export function useJobs() {
     return docRef
   }
 
-  return { createJob }
+  async function updateJob(
+    user: User,
+    jobId: string,
+    updates: Partial<JobData>
+  ) {
+    // strip out undefined so Firestore doesn't complain
+    const finalData = removeUndefinedFields(updates)
+
+    // Optionally ensure user is the one who owns the doc, etc.
+    // For now, just do:
+    const docRef = doc(db, 'jobs', jobId)
+    await updateDoc(docRef, finalData)
+  }
+
+  return { createJob, updateJob }
 }

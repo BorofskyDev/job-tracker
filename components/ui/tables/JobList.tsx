@@ -15,6 +15,8 @@ import { useAuth } from '@/context/AuthContext'
 import Modal from '@/components/ui/modals/Modal' // The generic modal
 import JobDetailsModal from '@/components/ui/modals/JobDetailModal' // Our new job-details component
 
+type Priority = 'LOW' | 'MEDIUM' | 'HIGH';
+
 interface Job {
   id: string
   companyName?: string
@@ -26,7 +28,7 @@ interface Job {
   contactEmail?: string
   contactPhone?: string
   jobPostingUrl?: string
-  priority?: string
+  priority?: Priority
   autoFollowUp?: boolean
   createdAt?: Timestamp
 }

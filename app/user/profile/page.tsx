@@ -7,7 +7,7 @@ import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import ModalButton from '@/components/ui/buttons/ModalButton'
 import JobCreatorModal from '@/components/ui/modals/JobCreatorModal'
-import JobList from '@/components/ui/tabls/JobList'
+import JobList from '@/components/ui/tables/JobList'
 
 export default function ProfilePage() {
   const { currentUser, loading } = useAuth()

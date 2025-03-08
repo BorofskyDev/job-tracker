@@ -39,9 +39,20 @@ function getRowBgColor(outcome?: string) {
       return 'bg-emerald-50'
     case 'Hired':
       return 'bg-emerald-200'
-    // default covers "Applied" or anything else
+    
     default:
       return 'bg-slate-50'
+  }
+}
+
+function getRowWeight(outcome?: string) {
+  switch (outcome) {
+    case 'LOW':
+      return 'font-light'
+    case 'HIGH':
+      return 'font-semibold'
+    default: 
+    return ''
   }
 }
 
@@ -147,12 +158,12 @@ export default function JobList() {
             const appliedDateFormatted =
               job.appliedDate?.toDate().toLocaleDateString() ?? ''
             const rowBgColor = getRowBgColor(job.outcome)
-
+            const rowWeight = getRowWeight(job.priority)
             return (
               <tr
                 key={job.id}
                 onClick={() => handleRowClick(job)}
-                className={`transition-all duration-200 cursor-pointer hover:bg-sky-100 ${rowBgColor}`}
+                className={`transition-all duration-200 cursor-pointer hover:bg-sky-100 ${rowBgColor} ${rowWeight}`}
               >
                 <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.companyName || ''}

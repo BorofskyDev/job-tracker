@@ -91,7 +91,7 @@ export function useEditableFields(
     setLocalJob({ ...initialJob })
     setHasChanges(false)
     resetEditing()
-  }, [initialJob.id])
+  }, [initialJob])
 
   function handleFieldClick(field: EditableField) {
     setEditingFields((prev) => ({

@@ -30,16 +30,17 @@ export default function Modal({ children, onClose }: ModalProps) {
     >
       <div
         onClick={handleContainerClick}
-        style={{
-          background: '#fff',
-          padding: '1rem',
-          borderRadius: '8px',
-          minWidth: '300px',
-          maxWidth: '90%',
-        }}
+        className='p-8 border rounded-2xl bg-sky-50'
+        // style={{
+        //   background: '#fff',
+        //   padding: '1rem',
+        //   borderRadius: '8px',
+        //   minWidth: '300px',
+        //   maxWidth: '90%',
+        // }}
       >
         <button
-          style={{ float: 'right' }}
+          className='float-right border py-2 px-4 rounded-full bg-sky-200 text-slate-950 font-bold transition-all duration-200 hover:bg-red-50 cursor-pointer'
           onClick={onClose}
           aria-label='Close Modal'
         >

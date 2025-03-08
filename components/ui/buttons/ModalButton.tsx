@@ -1,15 +1,11 @@
 'use client'
 
 import { useState, ReactNode } from 'react'
-import Modal from '@/components/modals/Modal'
+import Modal from '@/components/ui/modals/Modal'
 
 interface ModalButtonProps {
-  /** The label for the button that triggers the modal */
   buttonLabel: string
-  /**
-   * A function that renders your modal content. We pass in a `closeModal` callback
-   * so the child can close the modal if needed (i.e. after a successful action).
-   */
+  className?: string
   modalContent: (closeModal: () => void) => ReactNode
 }
 
@@ -20,6 +16,7 @@ interface ModalButtonProps {
 export default function ModalButton({
   buttonLabel,
   modalContent,
+  className,
 }: ModalButtonProps) {
   const [isOpen, setIsOpen] = useState(false)
 
@@ -33,7 +30,12 @@ export default function ModalButton({
 
   return (
     <>
-      <button onClick={openModal}>{buttonLabel}</button>
+      <button
+        className={`text-lg font-bold border py-2 px-8 rounded-3xl shadow-md transition-all duration-200 hover:shadow-xl cursor-pointer ${className}`}
+        onClick={openModal}
+      >
+        {buttonLabel}
+      </button>
       {isOpen && <Modal onClose={closeModal}>{modalContent(closeModal)}</Modal>}
     </>
   )

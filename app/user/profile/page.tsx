@@ -6,7 +6,7 @@ import { useEffect } from 'react'
 import { signOut } from 'firebase/auth'
 import { auth } from '@/lib/firebase'
 import ModalButton from '@/components/ui/buttons/ModalButton'
-import JobCreatorModal from '@/components/modals/JobCreatorModal'
+import JobCreatorModal from '@/components/ui/modals/JobCreatorModal'
 import JobList from '@/components/ui/tabls/JobList'
 
 export default function ProfilePage() {
@@ -37,14 +37,19 @@ export default function ProfilePage() {
   }
 
   return (
-    <div>
-      <h1>User Profile</h1>
-      <p>Welcome, {currentUser.email}</p>
-      <div>
-        <h2>Actions</h2>
-        <div>
+    <div className='py-20 px-10'>
+      <h1 className='text-4xl font-extrabold text-center uppercase mb-10'>
+        User Profile
+      </h1>
+      <p className='text-2xl font-medium text-center'>
+        Welcome, {currentUser.email}
+      </p>
+      <div className='my-10'>
+        <h2 className='text-xl font-semibold'>Actions</h2>
+        <div className='py-6 flex flex-wrap justify-center align-middle gap-6'>
           <ModalButton
             buttonLabel='Add Job'
+            className='bg-sky-200 hover:bg-blue-200'
             modalContent={(closeModal) => (
               <JobCreatorModal onClose={closeModal} />
             )}
@@ -52,10 +57,15 @@ export default function ProfilePage() {
         </div>
       </div>
       <div>
-        <h2>Jobs</h2>
+        <h2 className='text-xl font-semibold'>Jobs</h2>
         <JobList />
       </div>
-      <button onClick={handleSignOut}>Sign Out</button>
+      <button
+        className='mt-10 py-2 px-8 border rounded-2xl cursor-pointer bg-rose-300 font-bold transition-all duration-200 shadow-md hover:shadow-xl hover:bg-rose-900 hover:text-blue-50'
+        onClick={handleSignOut}
+      >
+        Sign Out
+      </button>
     </div>
   )
 }

@@ -12,12 +12,14 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/context/AuthContext'
+import Modal from '@/components/ui/modals/Modal' // The generic modal
+import JobDetailsModal from '@/components/ui/modals/JobDetailModal' // Our new job-details component
 
 interface Job {
   id: string
   companyName?: string
   jobTitle?: string
-  appliedDate?: Timestamp // Firestore stores timestamps
+  appliedDate?: Timestamp
   outcome?: string
   notes?: string
   contactName?: string
@@ -29,10 +31,28 @@ interface Job {
   createdAt?: Timestamp
 }
 
+function getRowBgColor(outcome?: string) {
+  switch (outcome) {
+    case 'Denied':
+      return 'bg-rose-50'
+    case 'Interview':
+      return 'bg-emerald-50'
+    case 'Hired':
+      return 'bg-emerald-200'
+    // default covers "Applied" or anything else
+    default:
+      return 'bg-slate-50'
+  }
+}
+
 export default function JobList() {
   const { currentUser } = useAuth()
   const [jobs, setJobs] = useState<Job[]>([])
   const [loading, setLoading] = useState(true)
+
+  // For showing the details modal
+  const [selectedJob, setSelectedJob] = useState<Job | null>(null)
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
 
   useEffect(() => {
     if (!currentUser) {
@@ -49,7 +69,6 @@ export default function JobList() {
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const docs = snapshot.docs.map((doc) => {
-        // Convert doc data into a Job object
         const data = doc.data() as DocumentData
         return {
           id: doc.id,
@@ -60,7 +79,6 @@ export default function JobList() {
       setLoading(false)
     })
 
-    // Cleanup on unmount
     return () => unsubscribe()
   }, [currentUser])
 
@@ -76,85 +94,95 @@ export default function JobList() {
     return <p className='text-gray-600'>No jobs found.</p>
   }
 
+  function handleRowClick(job: Job) {
+    // Set selected job and open the modal
+    setSelectedJob(job)
+    setIsDetailsModalOpen(true)
+  }
+
+  function closeDetailsModal() {
+    setSelectedJob(null)
+    setIsDetailsModalOpen(false)
+  }
+
   return (
-    <div className='overflow-x-auto'>
+    <div className='overflow-x-auto my-4 border rounded-2xl'>
       <table className='min-w-full divide-y divide-gray-200 bg-white'>
-        <thead className='bg-gray-50'>
-          <tr>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+        <thead className='bg-blue-900'>
+          <tr className='text-blue-50 border-b'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Company Name
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Job Title
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Applied Date
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Outcome
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
-              Notes
-            </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Contact Name
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Contact Email
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Contact Phone
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Job Posting
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Priority
             </th>
-            <th className='px-6 py-3 text-left text-sm font-medium text-gray-700 uppercase tracking-wider'>
+            <th className='px-6 py-3 text-left text-sm font-medium uppercase tracking-wider'>
               Auto Follow-Up
             </th>
           </tr>
         </thead>
-        <tbody className='divide-y divide-gray-200'>
+        <tbody className='divide-y divide-slate-400'>
           {jobs.map((job) => {
-            // Convert Firestore Timestamp => human-readable date
             const appliedDateFormatted =
               job.appliedDate?.toDate().toLocaleDateString() ?? ''
+            const rowBgColor = getRowBgColor(job.outcome)
 
             return (
-              <tr key={job.id} className='hover:bg-gray-100'>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+              <tr
+                key={job.id}
+                onClick={() => handleRowClick(job)}
+                className={`transition-all duration-200 cursor-pointer hover:bg-sky-100 ${rowBgColor}`}
+              >
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.companyName || ''}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.jobTitle || ''}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {appliedDateFormatted}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.outcome || ''}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
-                  {job.notes || ''}
-                </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.contactName || ''}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.contactEmail || ''}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.contactPhone || ''}
                 </td>
-                <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-800'>
+                <td className='px-6 py-4 whitespace-nowrap text-sm text-slate-950'>
                   {job.jobPostingUrl ? (
                     <a
                       href={job.jobPostingUrl}
                       target='_blank'
                       rel='noopener noreferrer'
                       className='text-blue-600 hover:underline'
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Link
                     </a>
@@ -173,6 +201,13 @@ export default function JobList() {
           })}
         </tbody>
       </table>
+
+      {/* If selectedJob is set, show the modal */}
+      {isDetailsModalOpen && selectedJob && (
+        <Modal onClose={closeDetailsModal}>
+          <JobDetailsModal job={selectedJob} onClose={closeDetailsModal} />
+        </Modal>
+      )}
     </div>
   )
 }

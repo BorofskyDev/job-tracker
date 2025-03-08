@@ -8,6 +8,8 @@ import { auth } from '@/lib/firebase'
 import ModalButton from '@/components/ui/buttons/ModalButton'
 import JobCreatorModal from '@/components/ui/modals/JobCreatorModal'
 import JobList from '@/components/ui/tables/JobList'
+import CoverLetterManager from '@/components/ui/modals/CoverLetterManagerModal'
+import ResumeManager from '@/components/ui/modals/ResumeManagerModal'
 
 export default function ProfilePage() {
   const { currentUser, loading } = useAuth()
@@ -54,6 +56,8 @@ export default function ProfilePage() {
               <JobCreatorModal onClose={closeModal} />
             )}
           />
+          <ResumeManager />
+          <CoverLetterManager />
         </div>
       </div>
       <div>

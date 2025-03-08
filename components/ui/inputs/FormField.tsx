@@ -10,7 +10,7 @@ interface FormFieldProps {
 
 export function FormField({ label, children, required }: FormFieldProps) {
   return (
-    <div className='my-4 flex gap-4 items-center'>
+    <div className='my-4 flex justify-between items-center'>
       <label className='font-medium'>
         {label}
         {required && <span className='text-2xl text-red-800'> *</span>}:

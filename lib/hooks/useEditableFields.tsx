@@ -147,27 +147,33 @@ export function useEditableFields(
 
   function renderBoolean(field: EditableField, label: string) {
     return (
-      <p>
+      <div className='flex items-center justify-between'>
         <strong>{label}:</strong>{' '}
         <input
+          className='className="
+        peer relative appearance-none shrink-0 w-6 h-6 border-2 cursor-pointer border-blue-800 rounded-sm mt-1 bg-white
+        focus:outline-none focus:ring-offset-0 focus:ring-1 focus:ring-sky-600
+        checked:bg-blue-950 checked:border-0
+        disabled:border-steel-400 disabled:bg-steel-400
+      " '
           type='checkbox'
           checked={!!localJob[field]}
           onChange={(e) => handleBooleanChange(field, e.target.checked)}
         />
-      </p>
+      </div>
     )
   }
 
   function renderTextArea(field: EditableField, label: string) {
     return (
-      <p>
-        <strong>{label}:</strong>{' '}
+      <div className='flex items-center justify-between gap-2'>
+        <strong className=''>{label}:</strong>{' '}
         <textarea
-          className='border p-1'
+          className='w-full ml-10 py-2 px-4 text-wrap border rounded-md shadow-lg bg-sky-200 text-medium focus:bg-blue-200'
           value={(localJob[field] as string) || ''}
           onChange={(e) => handleChange(field, e.target.value)}
         />
-      </p>
+      </div>
     )
   }
 
@@ -177,7 +183,7 @@ export function useEditableFields(
     options: string[]
   ) {
     return (
-      <p>
+      <div className='flex items-center justify-between'>
         <strong>{label}:</strong>{' '}
         <select
           className='border p-1'
@@ -191,21 +197,21 @@ export function useEditableFields(
             </option>
           ))}
         </select>
-      </p>
+      </div>
     )
   }
 
   function renderTextInput(field: EditableField, label: string) {
     return (
-      <p>
+      <div className='flex items-center justify-between'>
         <strong>{label}:</strong>{' '}
         <input
-          className='border p-1'
+          className='py-2 px-4 border rounded-md shadow-lg bg-sky-200 text-medium focus:bg-blue-200'
           type='text'
           value={(localJob[field] as string) || ''}
           onChange={(e) => handleChange(field, e.target.value)}
         />
-      </p>
+      </div>
     )
   }
 
@@ -213,15 +219,21 @@ export function useEditableFields(
     const value = localJob[field]
     if (typeof value === 'boolean') {
       return (
-        <p onClick={() => handleFieldClick(field)}>
+        <div
+          className='flex items-center justify-between'
+          onClick={() => handleFieldClick(field)}
+        >
           <strong>{label}:</strong> {value ? 'Yes' : 'No'}
-        </p>
+        </div>
       )
     }
     return (
-      <p onClick={() => handleFieldClick(field)}>
+      <div
+        className='flex items-center gap-6 justify-between'
+        onClick={() => handleFieldClick(field)}
+      >
         <strong>{label}:</strong> {value || ''}
-      </p>
+      </div>
     )
   }
 
@@ -243,7 +255,13 @@ export function useEditableFields(
         return renderDropdown(field, label, priorityOptions)
       }
       if (field === 'outcome') {
-        const outcomeOptions = ['Applied', 'Denied', 'Hired']
+        const outcomeOptions = [
+          'Applied',
+          'Denied',
+          'Hired',
+          'Ghost',
+          'No Response',
+        ]
         return renderDropdown(field, label, outcomeOptions)
       }
       if (isTextArea) {

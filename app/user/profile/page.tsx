@@ -51,7 +51,7 @@ export default function ProfilePage() {
         <div className='py-6 flex flex-wrap justify-center align-middle gap-6'>
           <ModalButton
             buttonLabel='Add Job'
-            className='bg-sky-200 hover:bg-blue-200'
+            className='bg-blue-900 text-blue-50 hover:bg-blue-950'
             modalContent={(closeModal) => (
               <JobCreatorModal onClose={closeModal} />
             )}

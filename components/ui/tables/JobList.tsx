@@ -41,6 +41,10 @@ function getRowBgColor(outcome?: string) {
       return 'bg-emerald-50'
     case 'Hired':
       return 'bg-emerald-200'
+      case 'Ghost':
+        return 'bg-purple-100'
+    case 'No Response':
+      return 'bg-gray-300'
     
     default:
       return 'bg-slate-50'

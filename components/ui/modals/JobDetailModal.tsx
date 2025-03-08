@@ -80,26 +80,29 @@ export default function JobDetailsModal({
     : ''
 
   return (
-    <div>
-      <h2 className='text-xl font-bold mb-4'>Job Details</h2>
+    <div className='flex flex-col gap-8 max-w-2xl'>
+      <h2 className='text-xl font-bold'>Job Details</h2>
 
       {/* Render editable fields (no timestamps) */}
-      <div className='space-y-2'>
+      <div className='flex flex-col gap-4 max-w-2xl'>
         {renderEditableField('companyName', 'Company Name')}
         {renderEditableField('jobTitle', 'Job Title')}
 
-        <p>
-          <strong>Applied Date:</strong> {appliedDateFormatted}
+        <p className='flex items-center justify-between'>
+          <strong className='flex items-center justify-between'>
+            Applied Date:
+          </strong>{' '}
+          {appliedDateFormatted}
         </p>
         {renderEditableField('outcome', 'Outcome', false)}
-        {renderEditableField('notes', 'Notes', true)}
         {renderEditableField('contactName', 'Contact Name')}
         {renderEditableField('contactEmail', 'Contact Email')}
         {renderEditableField('contactPhone', 'Contact Phone')}
         {renderEditableField('jobPostingUrl', 'Job Posting')}
         {renderEditableField('priority', 'Priority')}
         {renderEditableField('autoFollowUp', 'Auto Follow-Up')}
-        <p>
+        {renderEditableField('notes', 'Notes', true)}
+        <p className='flex items-center justify-between'>
           <strong>Created At:</strong> {createdAtFormatted}
         </p>
       </div>
